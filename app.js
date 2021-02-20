@@ -52,10 +52,10 @@ Product.belongsToMany(Cart, {
 });
 
 sequelize
-    // .sync({
-    //     force: true
-    // })
-    .sync()
+    .sync({
+        force: true
+    })
+    // .sync()
     .then(result => {
         return User.findByPk(1);
         // console.log(result);
