@@ -3,25 +3,40 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const session = require('express-session');
+const MongoDBStore = require('connect-mongodb-session')(session);
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
 
+const MONGODB_URI =
+  'mongodb+srv://freakybug:freakybug@sandbox.8fmzx.mongodb.net/myFirstDatabase';
+
 const app = express();
+const store = new MongoDBStore({
+  uri: MONGODB_URI,
+  collection: 'sessions'
+});
 
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
-const {
-  urlencoded
-} = require('body-parser');
+const authRoutes = require('./routes/auth');
 
 app.use(bodyParser.urlencoded({
   extended: false
 }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(
+  session({
+    secret: 'my secret',
+    resave: false,
+    saveUninitialized: false,
+    store: store
+  })
+);
 
 app.use((req, res, next) => {
   User.findById('604a2b7f92bcf33fa8e2ccd1')
@@ -34,29 +49,27 @@ app.use((req, res, next) => {
 
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
+app.use(authRoutes);
 
 app.use(errorController.get404);
 
 mongoose
-  .connect(
-    'mongodb+srv://freakybug:freakybug@sandbox.8fmzx.mongodb.net/myFirstDatabase?retryWrites=true&w=majority', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    })
+  .connect(MONGODB_URI, {
+    useNewUrlParser: true
+  })
   .then(result => {
     User.findOne().then(user => {
       if (!user) {
-            const user = new User({
-              name: 'sunny',
-              email: 'contact@sunnydanu.com',
-              cart: {
-                items: []
-              }
-            });
+        const user = new User({
+          name: 'Sunny Danu',
+          email: 'contact@sunnydanu.com',
+          cart: {
+            items: []
+          }
+        });
         user.save();
       }
-    })
-
+    });
     app.listen(3000);
   })
   .catch(err => {
