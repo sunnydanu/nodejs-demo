@@ -58,18 +58,7 @@ mongoose
     useNewUrlParser: true
   })
   .then(result => {
-    User.findOne().then(user => {
-      if (!user) {
-        const user = new User({
-          name: 'Sunny Danu',
-          email: 'contact@sunnydanu.com',
-          cart: {
-            items: []
-          }
-        });
-        user.save();
-      }
-    });
+    
     app.listen(3000);
   })
   .catch(err => {
