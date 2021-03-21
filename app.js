@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const MongoDBStore = require('connect-mongodb-session')(session);
+const csrf = require('csurf');
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
@@ -17,6 +18,7 @@ const store = new MongoDBStore({
   uri: MONGODB_URI,
   collection: 'sessions'
 });
+const csrfProtection = csrf();
 
 app.set('view engine', 'ejs');
 app.set('views', 'views');
@@ -37,14 +39,24 @@ app.use(
     store: store
   })
 );
+app.use(csrfProtection);
 
 app.use((req, res, next) => {
-  User.findById('604a2b7f92bcf33fa8e2ccd1')
+  if (!req.session.user) {
+    return next();
+  }
+  User.findById(req.session.user._id)
     .then(user => {
       req.user = user;
       next();
     })
     .catch(err => console.log(err));
+});
+
+app.use((req, res, next) => {
+  res.locals.isAuthenticated = req.session.isLoggedIn;
+  res.locals.csrfToken = req.csrfToken();
+  next();
 });
 
 app.use('/admin', adminRoutes);
@@ -55,10 +67,10 @@ app.use(errorController.get404);
 
 mongoose
   .connect(MONGODB_URI, {
-    useNewUrlParser: true
+    useNewUrlParser: true,
+    useUnifiedTopology: true
   })
   .then(result => {
-    
     app.listen(3000);
   })
   .catch(err => {
