@@ -7,12 +7,12 @@ const session = require('express-session');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const csrf = require('csurf');
 const flash = require('connect-flash');
+
 const errorController = require('./controllers/error');
 const User = require('./models/user');
 
 const MONGODB_URI =
-  'mongodb+srv://freakybug:freakybug@sandbox.8fmzx.mongodb.net/myFirstDatabase';
-
+'mongodb+srv://freakybug:freakybug@sandbox.8fmzx.mongodb.net/myFirstDatabase';
 const app = express();
 const store = new MongoDBStore({
   uri: MONGODB_URI,
@@ -27,9 +27,7 @@ const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const authRoutes = require('./routes/auth');
 
-app.use(bodyParser.urlencoded({
-  extended: false
-}));
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(
   session({
@@ -40,7 +38,7 @@ app.use(
   })
 );
 app.use(csrfProtection);
-app.use(flash())
+app.use(flash());
 
 app.use((req, res, next) => {
   if (!req.session.user) {
@@ -67,10 +65,7 @@ app.use(authRoutes);
 app.use(errorController.get404);
 
 mongoose
-  .connect(MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  })
+  .connect(MONGODB_URI)
   .then(result => {
     app.listen(3000);
   })
